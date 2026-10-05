@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F2F2F7">
-<title>ดูแลแม่ม้าใกล้คลอด</title>
+<title>Foalert</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 -15.5 1055 1055'><path d='M342.216277 802.924586h-52.224267a15.657876 15.657876 0 0 1-15.673549-15.861632l3.902714-331.10373a15.673549 15.673549 0 0 1 15.673549-15.485466h266.49736l74.668789-208.991108a15.673549 15.673549 0 0 1 28.980393-1.300904l28.729615 62.239664 124.824148 49.935929a15.673549 15.673549 0 0 1 8.651799 20.595043l-26.127807 62.694198a15.673549 15.673549 0 0 1-18.964995 8.980944l-40.751228-12.225369c-15.892979 22.648279-46.816892 49.497069-84.527452 35.782713a15.673549 15.673549 0 0 1 10.705035-29.466272c29.873785 10.893117 52.710146-31.644896 52.945249-32.083756a15.72057 15.72057 0 0 1 18.3694-7.711386l38.713667 11.6141 14.576401-34.967689-115.858877-46.346685a15.673549 15.673549 0 0 1-8.416696-7.99351l-15.266037-33.07119L586.190746 461.429293a15.673549 15.673549 0 0 1-14.74881 10.407237h-262.061745l-3.542222 299.756631h21.519783c0.454533-4.764759 1.112822-9.93703 1.974867-15.563834a15.673549 15.673549 0 1 1 30.986607 4.686391c-1.614376 10.705034-2.4294 19.638957-2.4294 26.550993a15.673549 15.673549 0 0 1-15.673549 15.657875z' fill='%230A5BC4'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
 <style>
@@ -131,6 +132,22 @@ h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-.01em;line-height:1.1
 .foal-form{background:#fff;border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
 .choice-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 
+/* calendar */
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+.cal-hd{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-bottom:4px}
+.cal-hd span{text-align:center;font-size:13px;font-weight:600;color:var(--ink3);padding:6px 0}
+.cal-day{min-height:90px;border-radius:10px;background:#fff;padding:6px 8px;display:flex;flex-direction:column;gap:3px}
+.cal-day.today{outline:2px solid var(--blue)}
+.cal-day.other-month{background:var(--bg);opacity:.5}
+.cal-num{font-size:13px;font-weight:700;color:var(--ink3)}
+.cal-day.today .cal-num{color:var(--blue)}
+.cal-chip{font-size:11px;font-weight:700;padding:2px 5px;border-radius:5px;border:1px solid;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:left;line-height:1.3}
+.cal-nav{display:flex;align-items:center;gap:12px}
+.cal-nav button{min-height:44px;min-width:44px;border:none;background:none;font-size:22px;cursor:pointer;border-radius:10px}
+.cal-nav button:hover{background:var(--line)}
+.cal-legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px}
+.cal-legend span{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;border:1px solid}
+
 /* milk entry */
 .milk-wrap{max-width:480px;margin:0 auto;padding:10px 16px 24px;min-height:100vh;display:flex;flex-direction:column;gap:14px}
 .milk-head{display:flex;align-items:center;gap:10px;min-height:48px}
@@ -198,7 +215,8 @@ const S = {
   stalls: [], mares: [], preg: [], hist: [], obs: [], checks: [], settings: {},
   views: [], barn: null, sort: 'due', q: '', details: false, foalForm: null,
   milk: { ca: null, ph: null, udder: null, waxing: false, leak: false },
-  queue: loadQueue()
+  queue: loadQueue(),
+  calYear: new Date().getFullYear(), calMonth: new Date().getMonth()
 };
 
 /* ── helpers ── */
@@ -224,16 +242,24 @@ function toast(msg) {
 function loadQueue() { try { return JSON.parse(localStorage.getItem(QKEY) || '[]'); } catch { return []; } }
 function saveQueue() { try { localStorage.setItem(QKEY, JSON.stringify(S.queue)); } catch {} }
 
-const HORSE = (stroke) => `<svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 38V26c0-6 3-11 8-14l2-7 3 5c5 3 8 8 7 14l-3 4h-5l-3-4-3 14"/><circle cx="26" cy="17" r="1"/></svg>`;
+const HORSE_SVG = `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%"><svg width="80" height="80" viewBox="0 -15.5 1055 1055" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <path d="M378.140052 456.178654l5.219292 70.530972 13.056066 20.892841 73.148455 7.836775 39.183874-15.673549 2.617482-83.587039zM278.86379 461.397946l-23.510324 65.31168-23.510324 88.822004 18.291032 28.729616 33.964582 15.67355zM294.537339 746.139317h52.255614l-7.836775 36.566391h-57.474905zM602.789035 738.302542h60.076714l-7.836774 41.801356-47.020648 2.60181zM670.702524 667.77157l65.31168 23.510324 49.638131-91.423813-96.658779-33.964582z" fill="#CFE1F8"/>
+  <path d="M597.883214 392.841841a15.360078 15.360078 0 0 1-6.175379-1.285231l-36.56639-15.673549a15.657876 15.657876 0 1 1 12.350756-28.807984l36.566391 15.673549a15.673549 15.673549 0 1 1-6.175378 30.093215zM618.462584 336.025225a15.360078 15.360078 0 0 1-6.175378-1.285231l-36.566391-15.67355a15.657876 15.657876 0 1 1 12.350757-28.807983l36.56639 15.673549a15.704896 15.704896 0 1 1-6.175378 30.093215zM577.319517 449.658457a15.360078 15.360078 0 0 1-6.175379-1.285231l-36.56639-15.673549a15.657876 15.657876 0 1 1 12.350757-28.807984l36.56639 15.67355a15.704896 15.704896 0 1 1-6.175378 30.093214zM662.223134 799.006199h-58.77581a15.673549 15.673549 0 0 1-15.67355-15.673549v-83.869163l-26.754748-87.897265a15.704896 15.704896 0 0 1 10.438583-19.560589 15.642202 15.642202 0 0 1 19.56059 10.438584l27.428711 90.122908c0.438859 1.473314 0.673963 3.009321 0.673963 4.561003v70.530972h27.428711v-50.939035c0-0.736657 0.047021-1.473314 0.156736-2.209971l23.024444-162.095847a15.689223 15.689223 0 0 1 31.049301 4.404267l-22.867708 160.998699v65.499763a15.704896 15.704896 0 0 1-15.689223 15.689223z" fill="#0A5BC4"/>
+  <path d="M717.09623 642.270705a15.062281 15.062281 0 0 1-1.865152-0.109714l-36.7388-4.372921a15.673549 15.673549 0 1 1 3.698958-31.127669l36.738799 4.372921a15.673549 15.673549 0 0 1-1.833805 31.237383z" fill="#0A5BC4"/>
+  <path d="M736.672493 712.801678a15.610855 15.610855 0 0 1-6.175378-1.269558l-65.139271-27.883244a15.657876 15.657876 0 0 1-8.228614-20.579371 15.72057 15.72057 0 0 1 20.579371-8.244287l51.989163 22.256441 35.751366-65.985643-81.612172-32.63233a15.673549 15.673549 0 0 1 11.629774-29.121455l97.959683 39.1682c4.169164 1.661396 7.413589 5.015536 8.91825 9.231721a15.595182 15.595182 0 0 1-0.97176 12.789616l-50.939035 94.041296a15.626529 15.626529 0 0 1-13.761377 8.228614zM478.215664 567.993755c-2.507768 0-5.015536-0.031347-7.523303-0.078368l-35.845408-0.078367-8.181592 0.078367c-16.880413 0.282124-34.528829 0.548574-46.67583-11.426017-7.836775-7.711386-11.629774-18.729891-11.629774-33.698131v-66.643932a15.673549 15.673549 0 0 1 15.673549-15.673549h129.291109a15.673549 15.673549 0 0 1 15.673549 15.673549v66.643932c0 14.983913-3.792999 26.002418-11.629773 33.698131-10.360216 10.203481-24.63882 11.504385-39.152527 11.504385z m-43.368711-31.503834l36.331288 0.094041c9.545192 0.125388 21.394395 0.329145 24.184286-2.413726 1.097148-1.081475 2.288338-4.639371 2.288339-11.363324v-50.970382h-97.94401v50.970382c0 6.723953 1.175516 10.281848 2.288338 11.363324 2.789892 2.742871 14.639095 2.554789 24.184287 2.413726l8.667472-0.094041zM356.385165 718.977056a15.689223 15.689223 0 0 1-15.219016-19.497895c4.451288-17.695437 8.244287-30.359665 8.244287-30.359665 0.297797-0.956087 0.658289-1.865152 1.112822-2.742872l12.617207-24.184286a15.673549 15.673549 0 0 1 13.902438-8.43237h203.379977a15.673549 15.673549 0 1 1 0 31.347099H386.556748l-7.50763 14.403992a804.836759 804.836759 0 0 0-7.476283 27.616794 15.689223 15.689223 0 0 1-15.18767 11.849203z" fill="#0A5BC4"/>
+  <path d="M342.216277 802.924586h-52.224267a15.657876 15.657876 0 0 1-15.673549-15.861632l3.902714-331.10373a15.673549 15.673549 0 0 1 15.673549-15.485466h266.49736l74.668789-208.991108a15.673549 15.673549 0 0 1 28.980393-1.300904l28.729615 62.239664 124.824148 49.935929a15.673549 15.673549 0 0 1 8.651799 20.595043l-26.127807 62.694198a15.673549 15.673549 0 0 1-18.964995 8.980944l-40.751228-12.225369c-15.892979 22.648279-46.816892 49.497069-84.527452 35.782713a15.673549 15.673549 0 0 1 10.705035-29.466272c29.873785 10.893117 52.710146-31.644896 52.945249-32.083756a15.72057 15.72057 0 0 1 18.3694-7.711386l38.713667 11.6141 14.576401-34.967689-115.858877-46.346685a15.673549 15.673549 0 0 1-8.416696-7.99351l-15.266037-33.07119L586.190746 461.429293a15.673549 15.673549 0 0 1-14.74881 10.407237h-262.061745l-3.542222 299.756631h21.519783c0.454533-4.764759 1.112822-9.93703 1.974867-15.563834a15.673549 15.673549 0 1 1 30.986607 4.686391c-1.614376 10.705034-2.4294 19.638957-2.4294 26.550993a15.673549 15.673549 0 0 1-15.673549 15.657875z" fill="#0A5BC4"/>
+  <path d="M686.391747 565.877826a15.673549 15.673549 0 0 1-14.764484-20.955536l25.297109-70.985505a15.673549 15.673549 0 0 1 29.528967 10.532626l-25.297109 70.985505a15.689223 15.689223 0 0 1-14.764483 10.42291zM377.02723 665.12274a15.673549 15.673549 0 0 1-14.325624-22.005663l18.729891-42.428298a15.673549 15.673549 0 0 1 28.682595 12.648554l-18.729891 42.428298a15.673549 15.673549 0 0 1-14.356971 9.357109zM290.587605 681.454579a15.657876 15.657876 0 0 1-7.883795-2.131603l-47.020648-27.428711a15.642202 15.642202 0 0 1-7.774081-13.541947c0-166.594156 43.431405-193.066781 52.130225-196.671697a15.673549 15.673549 0 0 1 13.07174 28.463165c-2.131603 1.551681-32.506941 26.09646-33.807845 159.227588l39.199546 22.867709a15.673549 15.673549 0 0 1-7.915142 29.215496z" fill="#0A5BC4"/>
+</svg></div>`;
 const CHECK = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+const bgFor = (v) => v.photo_url ? v.tint : '#E8F0FB';
 const photoHtml = (v) => v.photo_url
   ? `<img src="${esc(v.photo_url)}" alt="" loading="lazy">`
-  : HORSE('rgba(255,255,255,.8)');
+  : HORSE_SVG;
 
-/* ── routing: #/map, #/map/A06, #/list, #/list/A06, #/milk/A06 ── */
+/* ── routing: #/map, #/map/A06, #/list, #/list/A06, #/cal, #/cal/A06, #/milk/A06 ── */
 function route() {
   const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
-  const view = ['map', 'list', 'milk'].includes(parts[0]) ? parts[0] : 'map';
+  const view = ['map', 'list', 'cal', 'milk'].includes(parts[0]) ? parts[0] : 'map';
   return { view, code: parts[1] ? decodeURIComponent(parts[1]) : null };
 }
 const go = (h) => { if (location.hash !== h) location.hash = h; else render(); };
@@ -332,7 +358,7 @@ function render() {
     document.body.style.overflow = '';
     $app.innerHTML = renderMilk(r.code); return;
   }
-  $app.innerHTML = topBar(r.view) + (r.view === 'list' ? renderList() : renderMap()) + (r.code ? renderModal(r.code, r.view) : '');
+  $app.innerHTML = topBar(r.view) + (r.view === 'list' ? renderList() : r.view === 'cal' ? renderCal() : renderMap()) + (r.code ? renderModal(r.code, r.view) : '');
   document.body.style.overflow = r.code ? 'hidden' : '';
   window.scrollTo(0, scrollY);
 }
@@ -340,10 +366,11 @@ function render() {
 function topBar(view) {
   const pending = S.queue.length;
   return `<header class="top"><div class="top-in">
-    <span class="brand">ดูแลแม่ม้าใกล้คลอด</span>
+    <span class="brand">Foalert</span>
     <nav class="seg" aria-label="เลือกหน้า">
       <a href="#/map" ${view === 'map' ? 'aria-current="page"' : ''}>ผังคอก</a>
       <a href="#/list" ${view === 'list' ? 'aria-current="page"' : ''}>รายชื่อม้า</a>
+      <a href="#/cal" ${view === 'cal' ? 'aria-current="page"' : ''}>ปฏิทิน</a>
     </nav>
     <div class="top-right">
       ${pending ? `<span class="sync"><i></i>รอส่ง ${pending}</span>` : ''}
@@ -392,10 +419,12 @@ function renderMap() {
 
 function dueText(v) {
   if (v.st === 'r') return 'กำลังคลอดตอนนี้';
-  if (v.st === 'o') return 'น่าจะคลอดภายใน 3 วัน';
-  if (v.st === 'y') return 'น้ำนมเริ่มเปลี่ยน · อีกไม่กี่วัน';
   if (v.st === 'b') return 'คลอดเมื่อ ' + hhmm(v.preg.foaled_at) + ' น.';
   if (v.st === 'n') return 'ไม่ได้ตั้งท้องในฤดูนี้';
+  if (v.st === 'o') return 'คาดคลอด ' + offDate(-1) + ' – ' + offDate(3);
+  if (v.st === 'y') return 'น้ำนมเริ่มเปลี่ยน · คาดคลอดใน 3–10 วัน';
+  if ((v.st === 'p' || v.st === 'g') && v.left != null && v.sd != null)
+    return 'คาดคลอด ' + offDate(v.left - Math.round(1.28 * v.sd)) + ' – ' + offDate(v.left + Math.round(1.28 * v.sd));
   return 'คาดคลอดประมาณ ' + offDate(v.left) + ' (' + v.word + ')';
 }
 
@@ -426,7 +455,7 @@ function cardsHtml(cmp) {
   const list = S.views.filter((v) => !q || v.name.toLowerCase().includes(q) || v.code.toLowerCase().includes(q)).sort(cmp);
   if (!list.length) return '<p class="empty-state" style="grid-column:1/-1">ไม่พบม้าที่ค้นหา</p>';
   return list.map((v) => `<button class="card${v.st === 'r' ? ' live' : ''}" data-act="open" data-code="${esc(v.code)}" aria-label="คอก ${esc(v.code)} ${esc(v.name)} ${LABEL[v.st]}">
-    <span class="photo" style="background:${v.tint}">${photoHtml(v)}<span class="stall-tag">คอก ${esc(v.code)}</span></span>
+    <span class="photo" style="background:${bgFor(v)}">${photoHtml(v)}<span class="stall-tag">คอก ${esc(v.code)}</span></span>
     <span class="card-body">
       <span class="card-name">${esc(v.name)}</span>
       <span class="tag s-${v.st}">${PILL[v.st]}</span>
@@ -453,12 +482,23 @@ function tasksFor(v) {
 }
 
 function whenFor(v) {
-  const range = v.sd ? ' · อาจเร็วหรือช้ากว่านี้ได้ประมาณ ' + Math.round(1.28 * v.sd) + ' วัน' : '';
   switch (v.st) {
-    case 'p': return ['คาดว่าจะคลอด', 'ประมาณ ' + offDate(v.left), (v.left > 0 ? 'อีกราว ' + v.left + ' วัน' : v.left === 0 ? 'ครบกำหนดวันนี้' : 'เลยกำหนดมา ' + -v.left + ' วัน') + range];
-    case 'g': return ['คาดว่าจะคลอด', 'ประมาณ ' + offDate(v.left), (v.left > 0 ? 'อีกราว ' + v.left + ' วัน' : v.left === 0 ? 'ครบกำหนดวันนี้' : 'เลยกำหนดมา ' + -v.left + ' วัน') + ' · เริ่มเฝ้าดูใกล้ชิด'];
-    case 'y': return ['คาดว่าจะคลอด', 'อีกไม่กี่วัน', 'น้ำนมเริ่มเปลี่ยนแล้ว · ตรวจน้ำนมเช้าและเย็น'];
-    case 'o': return ['คาดว่าจะคลอด', 'ภายใน 3 วัน', 'ประมาณ ' + offDate(0) + ' – ' + offDate(3) + ' · น้ำนมเปลี่ยนชัดเจนแล้ว'];
+    case 'p': {
+      const wb = (v.left != null && v.sd != null)
+        ? offDate(v.left - Math.round(1.28 * v.sd)) + ' – ' + offDate(v.left + Math.round(1.28 * v.sd))
+        : offDate(v.left);
+      const ws = 'ช่วง 80% · อีกราว ' + v.left + ' วัน';
+      return ['คาดว่าจะคลอด', wb, ws];
+    }
+    case 'g': {
+      const wb = (v.left != null && v.sd != null)
+        ? offDate(v.left - Math.round(1.28 * v.sd)) + ' – ' + offDate(v.left + Math.round(1.28 * v.sd))
+        : offDate(v.left);
+      const ws = 'เริ่มเฝ้าดูใกล้ชิดแล้ว · ช่วง 80%';
+      return ['คาดว่าจะคลอด', wb, ws];
+    }
+    case 'y': return ['คาดว่าจะคลอด', '3 – 10 วัน', 'น้ำนมเริ่มเปลี่ยน · ตรวจเช้า-เย็น'];
+    case 'o': return ['คาดว่าจะคลอด', offDate(0) + ' – ' + offDate(3), 'น้ำนมเปลี่ยนชัด · อาจคลอดคืนนี้ถึง 3 วันข้างหน้า'];
     case 'r': return ['ตอนนี้', 'กำลังคลอด', 'แจ้งเมื่อ ' + hhmm(v.active.labor_started_at) + ' น. · อยู่กับม้าและโทรหาสัตวแพทย์'];
     case 'b': return ['คลอดแล้ว', 'วันนี้ ' + hhmm(v.preg.foaled_at) + ' น.', 'ติดตามลูกม้าตามรายการด้านล่าง'];
     default: return ['สถานะ', 'ไม่ได้ตั้งท้อง', 'ไม่ต้องตรวจน้ำนมในฤดูนี้'];
@@ -527,7 +567,7 @@ function renderModal(code, view) {
   return `<div class="overlay" data-act="backdrop" data-view="${view}">
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-name">
       <div class="dlg-head">
-        <div class="dlg-photo" style="background:${v.tint}">${photoHtml(v)}</div>
+        <div class="dlg-photo" style="background:${bgFor(v)}">${photoHtml(v)}</div>
         <div class="dlg-title"><h2 id="dlg-name">${esc(v.name)}</h2><div style="color:var(--ink2)">คอก ${esc(v.code)}</div><span class="tag s-${v.st}">${PILL[v.st]}</span></div>
         <button class="close-btn" data-act="close" data-view="${view}">ปิด</button>
       </div>
@@ -546,6 +586,77 @@ function renderModal(code, view) {
       <div class="dlg-foot">${actions}</div>
     </div>
   </div>`;
+}
+
+/* ── calendar ── */
+function renderCal() {
+  const yr = S.calYear, mo = S.calMonth;
+  const first = new Date(Date.UTC(yr, mo, 1));
+  const last = new Date(Date.UTC(yr, mo + 1, 0));
+  const startDow = first.getUTCDay();
+  const todayNum = dayNum(today());
+
+  const chips = {};
+  for (const v of S.views) {
+    if (!['p','g','y','o','r'].includes(v.st)) continue;
+    let start, end;
+    if (v.st === 'r') { start = end = 0; }
+    else if (v.st === 'o') { start = -1; end = 3; }
+    else if (v.st === 'y') { start = 0; end = 10; }
+    else if (v.left != null && v.sd != null) { start = v.left - Math.round(1.28 * v.sd); end = v.left + Math.round(1.28 * v.sd); }
+    else continue;
+    for (let d = start; d <= end; d++) {
+      const t = new Date((todayNum + d) * 864e5);
+      const key = t.getUTCFullYear() + '-' + String(t.getUTCMonth() + 1).padStart(2, '0') + '-' + String(t.getUTCDate()).padStart(2, '0');
+      if (!chips[key]) chips[key] = [];
+      chips[key].push(v);
+    }
+  }
+
+  const days = [];
+  for (let i = 0; i < startDow; i++) {
+    const d = new Date(Date.UTC(yr, mo, 1 - (startDow - i)));
+    days.push({ date: d, cur: false });
+  }
+  for (let d = 1; d <= last.getUTCDate(); d++) days.push({ date: new Date(Date.UTC(yr, mo, d)), cur: true });
+  const rem = 7 - (days.length % 7); if (rem < 7) for (let i = 1; i <= rem; i++) days.push({ date: new Date(Date.UTC(yr, mo + 1, i)), cur: false });
+
+  const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const dow = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+  const cells = days.map(({ date, cur }) => {
+    const key = date.getUTCFullYear() + '-' + String(date.getUTCMonth() + 1).padStart(2, '0') + '-' + String(date.getUTCDate()).padStart(2, '0');
+    const isToday = dayNum(key) === todayNum;
+    const mares = chips[key] || [];
+    const chipsHtml = mares.slice(0, 4).map((v) =>
+      `<button class="cal-chip s-${v.st}" data-act="open" data-code="${esc(v.code)}" title="${esc(v.name)}">${esc(v.name)}</button>`
+    ).join('') + (mares.length > 4 ? `<span style="font-size:11px;color:var(--ink3)">+${mares.length - 4}</span>` : '');
+    return `<div class="cal-day${!cur ? ' other-month' : ''}${isToday ? ' today' : ''}">
+      <span class="cal-num">${date.getUTCDate()}</span>${chipsHtml}</div>`;
+  }).join('');
+
+  const thYear = yr + 543;
+  return `<main class="page">
+    <div class="head-row">
+      <div><h1>ปฏิทินคาดคลอด</h1><p class="lead">คลิกที่ชื่อม้าเพื่อดูรายละเอียด</p></div>
+      <div class="cal-nav">
+        <button data-act="cal-prev" aria-label="เดือนก่อน">‹</button>
+        <span style="font-size:18px;font-weight:700;min-width:160px;text-align:center">${thaiMonths[mo]} ${thYear}</span>
+        <button data-act="cal-next" aria-label="เดือนถัดไป">›</button>
+      </div>
+    </div>
+    <div class="panel" style="padding:12px">
+      <div class="cal-hd">${dow.map((d) => `<span>${d}</span>`).join('')}</div>
+      <div class="cal-grid">${cells}</div>
+    </div>
+    <div class="cal-legend">
+      <span class="s-r">กำลังคลอด</span>
+      <span class="s-o">ใกล้คลอดมาก</span>
+      <span class="s-y">น้ำนมเริ่มเปลี่ยน</span>
+      <span class="s-g">ช่วงเฝ้าดู</span>
+      <span class="s-p">คาดคลอด (80%)</span>
+    </div>
+  </main>`;
 }
 
 /* ── milk entry ── */
@@ -567,7 +678,7 @@ function renderMilk(code) {
       <span class="ttl">บันทึกน้ำนม</span>
       <span class="cnt">เหลือ ${left.length} / ${all.length}</span>
     </div>
-    <section class="who" aria-label="ม้าตัวนี้"><span class="ph" style="background:${v.tint}">${v.photo_url ? `<img src="${esc(v.photo_url)}" alt="">` : ''}</span>
+    <section class="who" aria-label="ม้าตัวนี้"><span class="ph" style="background:${bgFor(v)}">${v.photo_url ? `<img src="${esc(v.photo_url)}" alt="">` : ''}</span>
       <span><b>${esc(v.name)}</b><span style="color:var(--ink2);font-size:15px">คอก ${esc(v.code)} · ${PILL[v.st]}</span></span></section>
     <section class="step"><h2>1. แคลเซียม · ดูสีที่แถบทดสอบ</h2>${opts(CA, 'ca', 5)}</section>
     <section class="step"><h2>2. ค่า pH</h2>${opts(PH, 'ph', 3)}</section>
@@ -613,6 +724,8 @@ async function act(el) {
 
   if (a === 'open') { S.details = false; S.foalForm = null; return go(`#/${r.view}/${encodeURIComponent(el.dataset.code)}`); }
   if (a === 'close') return go(`#/${el.dataset.view}`);
+  if (a === 'cal-prev') { if (S.calMonth === 0) { S.calMonth = 11; S.calYear--; } else S.calMonth--; return render(); }
+  if (a === 'cal-next') { if (S.calMonth === 11) { S.calMonth = 0; S.calYear++; } else S.calMonth++; return render(); }
   if (a === 'barn') { S.barn = el.dataset.v; return render(); }
   if (a === 'sort') { S.sort = el.dataset.v; return render(); }
   if (a === 'details') { S.details = !S.details; return render(); }
