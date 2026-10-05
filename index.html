@@ -132,6 +132,12 @@ h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-.01em;line-height:1.1
 .secondary.blue{color:var(--blue-ink)}
 .foal-form{background:#fff;border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
 .choice-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.foal-form label{display:flex;flex-direction:column;gap:6px;color:var(--ink2)}
+.foal-form input[type="date"]{min-height:52px;padding:0 14px;border-radius:12px;border:1px solid var(--line2);background:#fff;font-size:18px;color:var(--ink)}
+.secondary:disabled{background:#E9E9EE;color:var(--ink3);cursor:not-allowed}
+.move-line{padding:0 18px 16px;display:flex;flex-direction:column;gap:10px;font-size:16px;color:var(--ink2)}
+.move-line .primary,.move-line .secondary{width:100%}
+.dlg-foot .hint{text-align:center;font-size:14px;color:var(--ink3)}
 
 /* calendar */
 .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
@@ -214,7 +220,7 @@ const QKEY = 'fm_pending_obs_v1';
 const S = {
   session: null, staff: null, loaded: false,
   stalls: [], mares: [], preg: [], hist: [], obs: [], checks: [], settings: {},
-  views: [], barn: null, sort: 'due', q: '', details: false, foalForm: null,
+  views: [], barn: null, sort: 'due', q: '', details: false, foalForm: null, pregForm: null,
   milk: { ca: null, ph: null, udder: null, waxing: false, leak: false },
   queue: loadQueue(),
   calYear: new Date().getFullYear(), calMonth: new Date().getMonth()
@@ -227,7 +233,11 @@ const ymd = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d);
 const today = () => ymd(new Date());
 const dayNum = (s) => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / 864e5;
 const diffDays = (a, b) => Math.round(dayNum(b) - dayNum(a));
-const offDate = (off) => { const t = new Date((dayNum(today()) + off) * 864e5); return t.getUTCDate() + ' ' + MON[t.getUTCMonth()]; };
+const offDate = (off) => {
+  const t = new Date((dayNum(today()) + off) * 864e5);
+  const yr = t.getUTCFullYear() !== new Date(dayNum(today()) * 864e5).getUTCFullYear() ? ' ' + (t.getUTCFullYear() + 543) : '';
+  return t.getUTCDate() + ' ' + MON[t.getUTCMonth()] + yr;
+};
 const fmtDate = (s) => { const t = new Date(dayNum(s) * 864e5); return t.getUTCDate() + ' ' + MON[t.getUTCMonth()] + ' ' + (t.getUTCFullYear() + 543); };
 const hhmm = (iso) => new Intl.DateTimeFormat('th-TH', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso));
 const hourBkk = (iso) => +new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hour12: false }).format(new Date(iso));
@@ -264,6 +274,9 @@ function route() {
   return { view, code: parts[1] ? decodeURIComponent(parts[1]) : null };
 }
 const go = (h) => { if (location.hash !== h) location.hash = h; else render(); };
+// ม้าถูกย้ายคอก → รหัสในลิงก์ (#/map/A06) เปลี่ยน จึงต้องพา modal ตามไปคอกใหม่
+const followMare = (id, view) => { const nv = S.views.find((x) => x.id === id); go(`#/${view}/${encodeURIComponent(nv ? nv.code : '')}`.replace(/\/$/, '')); };
+const isMissingFn = (e) => e && (e.code === 'PGRST202' || e.code === '42883' || /Could not find the function|does not exist/i.test(e.message || ''));
 
 /* ═════════════ data ═════════════ */
 async function loadAll() {
@@ -334,12 +347,23 @@ function compute() {
       else if (day >= milkStart || left - 1.28 * sd <= 7) st = 'g';
       else st = 'p';
     }
-    const word = { p: null, g: null, y: 'มีสัญญาณ', o: 'ใน 3 วัน', r: 'กำลังคลอด', b: 'คลอดแล้ว', n: 'ไม่ท้อง' }[st]
+    // หลังคลอด: นับวันตั้งแต่คลอด → รอผสมใหม่ / อยู่คอกคลอดกี่วัน
+    const stall = stallBy[m.stall_code] || null;
+    const lastFoalIso = foaled ? foaled.foaled_at : (hist[0]?.foaled_at ?? null);
+    const sinceFoal = lastFoalIso ? Math.max(0, diffDays(ymd(new Date(lastFoalIso)), t)) : null;
+    const rebreedLeft = sinceFoal != null ? setting('rebreed_wait_days', 10) - sinceFoal : 0;
+    const postFoal = !!stall?.is_foaling && (!active || !!m.home_stall_code);
+    const returnLeft = postFoal ? (sinceFoal != null ? setting('foaling_stall_days', 7) - sinceFoal : 0) : null;
+    const canReturn = postFoal && returnLeft <= 0;
+
+    const word = canReturn ? 'ย้ายกลับได้'
+      : { p: null, g: null, y: 'มีสัญญาณ', o: 'ใน 3 วัน', r: 'กำลังคลอด', b: 'คลอดแล้ว', n: sinceFoal != null && sinceFoal <= 30 ? 'หลังคลอด' : 'ไม่ท้อง' }[st]
       ?? (left > 0 ? 'อีก ' + left + ' วัน' : left === 0 ? 'ครบกำหนด' : 'เลย ' + -left + ' วัน');
     const todayObs = obs.filter((o) => ymd(new Date(o.observed_at)) === t);
     const milking = ['g', 'y', 'o'].includes(st) && day >= milkStart;
     return {
-      ...m, stall: stallBy[m.stall_code] || null, code: m.stall_code || '—', preg, active, hist, n, st, day, mu, sd, left, word,
+      ...m, stall, code: m.stall_code || '—', preg, active, hist, n, st, day, mu, sd, left, word,
+      sinceFoal, rebreedLeft, postFoal, returnLeft, canReturn,
       obs, last, todayObs, milking, needMilk: milking ? (st === 'g' ? 1 : 2) : 0,
       age, rank: RANK[st], risk: !!m.risk_note, tint: TINTS[idx % TINTS.length],
       overdue: day != null && day >= setting('overdue_day', 370)
@@ -393,6 +417,7 @@ function renderMap() {
   const rows = [...new Set(stalls.map((s) => s.row_letter))];
   const maxCol = Math.max(1, ...stalls.map((s) => s.col));
   const urgent = S.views.filter((v) => v.stall?.barn === S.barn && v.rank <= 2).length;
+  const toReturn = S.views.filter((v) => v.canReturn).length;
   const rowsHtml = rows.map((L) => {
     const cells = [];
     for (let c = 1; c <= maxCol; c++) {
@@ -410,7 +435,7 @@ function renderMap() {
   return `<main class="page">
     <div class="head-row">
       <div><h1>${esc(S.barn || 'ผังคอก')}</h1>
-      <p class="lead">${urgent ? `วันนี้มีม้าที่ต้องดูใกล้ชิด <strong>${urgent} ตัว</strong> · ` : ''}แตะที่คอกเพื่อดูรายละเอียด</p></div>
+      <p class="lead">${urgent ? `วันนี้มีม้าที่ต้องดูใกล้ชิด <strong>${urgent} ตัว</strong> · ` : ''}${toReturn ? `ครบกำหนดย้ายกลับคอกเดิม <strong>${toReturn} ตัว</strong> · ` : ''}แตะที่คอกเพื่อดูรายละเอียด</p></div>
       ${barnPicker()}
     </div>
     <div class="panel map-scroll">${rowsHtml || '<p class="empty-state">ยังไม่มีคอกในโรงเรือนนี้</p>'}</div>
@@ -421,7 +446,7 @@ function renderMap() {
 function dueText(v) {
   if (v.st === 'r') return 'กำลังคลอดตอนนี้';
   if (v.st === 'b') return 'คลอดเมื่อ ' + hhmm(v.preg.foaled_at) + ' น.';
-  if (v.st === 'n') return 'ไม่ได้ตั้งท้องในฤดูนี้';
+  if (v.st === 'n') return v.sinceFoal != null && v.sinceFoal <= 30 ? 'คลอดมาแล้ว ' + v.sinceFoal + ' วัน' : 'ไม่ได้ตั้งท้องในฤดูนี้';
   if (v.st === 'o') return 'คาดคลอด ' + offDate(-1) + ' – ' + offDate(3);
   if (v.st === 'y') return 'น้ำนมเริ่มเปลี่ยน · คาดคลอดใน 3–10 วัน';
   if ((v.st === 'p' || v.st === 'g') && v.left != null && v.sd != null)
@@ -502,7 +527,10 @@ function whenFor(v) {
     case 'o': return ['คาดว่าจะคลอด', offDate(0) + ' – ' + offDate(3), 'น้ำนมเปลี่ยนชัด · อาจคลอดคืนนี้ถึง 3 วันข้างหน้า'];
     case 'r': return ['ตอนนี้', 'กำลังคลอด', 'แจ้งเมื่อ ' + hhmm(v.active.labor_started_at) + ' น. · อยู่กับม้าและโทรหาสัตวแพทย์'];
     case 'b': return ['คลอดแล้ว', 'วันนี้ ' + hhmm(v.preg.foaled_at) + ' น.', 'ติดตามลูกม้าตามรายการด้านล่าง'];
-    default: return ['สถานะ', 'ไม่ได้ตั้งท้อง', 'ไม่ต้องตรวจน้ำนมในฤดูนี้'];
+    default:
+      if (v.sinceFoal != null && v.sinceFoal <= 30)
+        return ['หลังคลอด', 'คลอดมาแล้ว ' + v.sinceFoal + ' วัน', v.postFoal ? 'อยู่คอกคลอด · ยังไม่ได้ตั้งท้อง' : 'ยังไม่ได้ตั้งท้อง'];
+      return ['สถานะ', 'ไม่ได้ตั้งท้อง', 'ไม่ต้องตรวจน้ำนมในฤดูนี้'];
   }
 }
 
@@ -557,13 +585,47 @@ function renderModal(code, view) {
       <button class="primary" data-act="foalsave" data-code="${esc(v.code)}" style="min-height:52px;font-size:17px">ยืนยัน คลอดแล้ว</button></div>
     </div>` : '';
 
-  const actions = v.active ? `
+  const isLead = S.staff.role !== 'groom';
+  const pf = S.pregForm && S.pregForm.code === v.code ? S.pregForm : null;
+  const pregForm = pf && !v.active ? `<div class="foal-form">
+      <b>บันทึกว่า ${esc(v.name)} ท้อง</b>
+      <label>วันที่ผสม (หรือวันที่ตกไข่)
+        <input id="preg-date" type="date" value="${esc(pf.date)}" max="${today()}"></label>
+      <span style="color:var(--ink2)">เพศลูกในท้อง (ถ้ายังไม่ทราบ ไม่ต้องเลือก)</span>
+      <div class="choice-row">${[['M', 'ผู้'], ['F', 'เมีย'], ['', 'ยังไม่ทราบ']].map(([k, l]) =>
+        `<button class="opt" data-act="pregsex" data-v="${k}" aria-pressed="${pf.sex === k}">${l}</button>`).join('')}</div>
+      <div class="two"><button class="secondary" data-act="pregcancel" style="background:#F2F2F7">ยกเลิก</button>
+      <button class="primary" data-act="pregsave" data-code="${esc(v.code)}" style="min-height:52px;font-size:17px">บันทึกว่าท้อง</button></div>
+    </div>` : '';
+
+  // ม้าที่ยังไม่ท้อง (รวมที่เพิ่งคลอด): ปุ่มบันทึกการท้อง — ถ้าเพิ่งคลอด ปุ่มจะกดไม่ได้และบอกว่ารออีกกี่วัน
+  let pregAction = '';
+  if (!v.active && !pf) {
+    if (v.sinceFoal != null && v.rebreedLeft > 0) {
+      pregAction = `<button class="secondary" disabled>บันทึกว่าท้อง · รออีก ${v.rebreedLeft} วัน</button>
+        <span class="hint">คลอดมาแล้ว ${v.sinceFoal} วัน · บันทึกการท้องใหม่ได้เมื่อครบ ${setting('rebreed_wait_days', 10)} วันหลังคลอด</span>`;
+    } else if (isLead) {
+      pregAction = `<button class="primary" data-act="pregopen" data-code="${esc(v.code)}">บันทึกว่าท้อง</button>`;
+    } else {
+      pregAction = '<span class="hint">ให้สัตวแพทย์หรือผู้จัดการเป็นผู้บันทึกการท้อง</span>';
+    }
+  }
+
+  // ม้าอยู่คอกคลอดหลังคลอด: ปุ่มย้ายกลับคอกเดิม (กดได้เมื่อครบกำหนด)
+  const returnBox = v.postFoal ? `<section class="box"><h3>ย้ายกลับคอกเดิม</h3><div class="move-line">
+      <span>${v.home_stall_code ? 'คอกเดิม ' + esc(v.home_stall_code) : 'ไม่ทราบคอกเดิม · ระบบจะหาคอกว่างให้'}${v.sinceFoal != null ? ' · คลอดมาแล้ว ' + v.sinceFoal + ' วัน' : ''}</span>
+      ${v.canReturn
+        ? `<button class="primary" data-act="movehome" data-code="${esc(v.code)}">ย้ายกลับ${v.home_stall_code ? 'คอก ' + esc(v.home_stall_code) : ''}</button>`
+        : `<button class="secondary" disabled>ย้ายกลับได้ในอีก ${v.returnLeft} วัน</button>`}
+    </div></section>` : '';
+
+  const actions = pregAction || (v.active ? `
     ${v.milking ? `<a class="primary" href="#/milk/${encodeURIComponent(v.code)}">
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3C7.5 7.5 5.5 10.5 5.5 13.5a5.5 5.5 0 0 0 11 0C16.5 10.5 14.5 7.5 11 3z"/></svg>บันทึกน้ำนม</a>` : ''}
     <div class="two">
       ${v.st === 'r' ? '<span></span>' : `<button class="secondary danger" data-act="labor" data-code="${esc(v.code)}">ม้ากำลังคลอด</button>`}
       <button class="secondary blue" data-act="foalopen" data-code="${esc(v.code)}">ม้าคลอดแล้ว</button>
-    </div>` : '';
+    </div>` : '');
 
   return `<div class="overlay" data-act="backdrop" data-view="${view}">
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-name">
@@ -575,7 +637,7 @@ function renderModal(code, view) {
       <div class="dlg-body">
         <section class="when s-${v.st}" style="border:none"><h3>${esc(wt)}</h3><p class="big">${esc(wb)}</p><p class="sub">${esc(ws)}</p></section>
         ${v.risk ? `<div class="warn" role="note"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C4000F" stroke-width="2" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5" stroke-linecap="round"/></svg><span><b>ม้าเสี่ยง</b> · ${esc(v.risk_note)} ให้โทรบอกสัตวแพทย์ทันทีที่เริ่มคลอด</span></div>` : ''}
-        ${foalForm}
+        ${foalForm}${pregForm}${returnBox}
         <section class="box"><h3>ต้องทำวันนี้</h3><ul class="todo">${todo}</ul></section>
         ${last ? `<div class="box milk-line"><span>ตรวจน้ำนมล่าสุด · ${esc(lastWhen)}</span><span class="tag ${milkWord[1]}">${milkWord[0]}</span></div>` : ''}
         <section class="box">
@@ -723,7 +785,7 @@ async function act(el) {
   const r = route();
   const v = el.dataset.code ? S.views.find((x) => x.code === el.dataset.code) : null;
 
-  if (a === 'open') { S.details = false; S.foalForm = null; return go(`#/${r.view}/${encodeURIComponent(el.dataset.code)}`); }
+  if (a === 'open') { S.details = false; S.foalForm = null; S.pregForm = null; return go(`#/${r.view}/${encodeURIComponent(el.dataset.code)}`); }
   if (a === 'close') return go(`#/${el.dataset.view}`);
   if (a === 'cal-prev') { if (S.calMonth === 0) { S.calMonth = 11; S.calYear--; } else S.calMonth--; return render(); }
   if (a === 'cal-next') { if (S.calMonth === 11) { S.calMonth = 0; S.calYear++; } else S.calMonth++; return render(); }
@@ -757,14 +819,46 @@ async function act(el) {
   if (a === 'foalsex') { S.foalForm.sex = el.dataset.v; return render(); }
   if (a === 'foalcancel') { S.foalForm = null; return render(); }
   if (a === 'foalsave' && v?.active) {
-    const now = new Date().toISOString();
-    const gestation = diffDays(v.active.ovulation_date, today());
     const sex = S.foalForm?.sex || null;
-    const up = await sb.from('pregnancies').update({ status: 'foaled', foaled_at: now }).eq('id', v.active.id);
-    if (up.error) return toast('บันทึกไม่สำเร็จ: ' + up.error.message);
-    const ins = await sb.from('foaling_records').insert({ mare_id: v.id, pregnancy_id: v.active.id, foaled_at: now, gestation_days: gestation, foal_sex: sex });
-    if (ins.error) toast('บันทึกประวัติไม่สำเร็จ: ' + ins.error.message); else toast('บันทึกการคลอดแล้ว');
-    S.foalForm = null; return loadAll();
+    // ฟังก์ชันในฐานข้อมูลทำทุกอย่างในขั้นตอนเดียว: บันทึกคลอด + ย้ายเข้าคอกคลอดที่ว่าง
+    const rpc = await sb.rpc('record_foaling', { p_pregnancy_id: v.active.id, p_foal_sex: sex });
+    if (rpc.error) {
+      if (!isMissingFn(rpc.error)) return toast('บันทึกไม่สำเร็จ: ' + rpc.error.message);
+      // ยังไม่ได้รัน migration_002.sql → บันทึกคลอดแบบเดิม (ยังไม่ย้ายคอก)
+      const now = new Date().toISOString();
+      const up = await sb.from('pregnancies').update({ status: 'foaled', foaled_at: now }).eq('id', v.active.id);
+      if (up.error) return toast('บันทึกไม่สำเร็จ: ' + up.error.message);
+      const ins = await sb.from('foaling_records').insert({ mare_id: v.id, pregnancy_id: v.active.id, foaled_at: now, gestation_days: diffDays(v.active.ovulation_date, today()), foal_sex: sex });
+      toast(ins.error ? 'บันทึกประวัติไม่สำเร็จ: ' + ins.error.message : 'บันทึกการคลอดแล้ว (ยังไม่ย้ายคอก · ต้องรัน migration_002.sql)');
+    } else {
+      const d = rpc.data || {};
+      toast(d.moved ? `บันทึกการคลอดแล้ว · ย้าย ${v.name} ไปคอก ${d.stall}` : d.full ? 'บันทึกการคลอดแล้ว · คอกคลอดเต็ม ยังไม่ได้ย้าย' : 'บันทึกการคลอดแล้ว');
+    }
+    S.foalForm = null; await loadAll();
+    return followMare(v.id, r.view);
+  }
+
+  if (a === 'pregopen') { S.pregForm = { code: el.dataset.code, date: today(), sex: '' }; S.foalForm = null; return render(); }
+  if (a === 'pregsex') { if (S.pregForm) S.pregForm.sex = el.dataset.v; return render(); }
+  if (a === 'pregcancel') { S.pregForm = null; return render(); }
+  if (a === 'pregsave' && v && !v.active) {
+    const f = S.pregForm;
+    if (!f?.date) return toast('เลือกวันที่ผสมก่อน');
+    const age = diffDays(f.date, today());
+    if (age < 0) return toast('วันที่ผสมต้องไม่เป็นวันในอนาคต');
+    if (age > 400) return toast('วันที่ผสมเก่าเกินไป ลองตรวจวันที่อีกครั้ง');
+    const { error } = await sb.from('pregnancies').insert({ mare_id: v.id, ovulation_date: f.date, fetal_sex: f.sex || null });
+    if (error) return toast(error.code === '42501' ? 'เฉพาะสัตวแพทย์หรือผู้จัดการที่บันทึกการท้องได้' : 'บันทึกไม่สำเร็จ: ' + error.message);
+    S.pregForm = null; toast(`บันทึกแล้ว · ${v.name} ท้อง`); return loadAll();
+  }
+
+  if (a === 'movehome' && v) {
+    if (!confirm(`ย้าย ${v.name} ออกจากคอกคลอด กลับ${v.home_stall_code ? 'คอก ' + v.home_stall_code : 'คอกปกติ'}?`)) return;
+    const { data, error } = await sb.rpc('return_to_home_stall', { p_mare_id: v.id });
+    if (error) return toast(isMissingFn(error) ? 'ต้องรัน migration_002.sql ก่อน' : 'ย้ายไม่สำเร็จ: ' + error.message);
+    toast(data?.was_home ? `ย้าย ${v.name} กลับคอก ${data.stall} แล้ว` : `คอกเดิมมีม้าอยู่ ย้าย ${v.name} ไปคอก ${data?.stall} แทน`);
+    await loadAll();
+    return followMare(v.id, r.view);
   }
 
   if (a === 'mpick') { S.milk[el.dataset.f] = +el.dataset.v; return render(); }
@@ -795,6 +889,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { const r = route(); if (r.code && r.view !== 'milk') go(`#/${r.view}`); }
 });
 document.addEventListener('input', (e) => {
+  if (e.target.id === 'preg-date' && S.pregForm) S.pregForm.date = e.target.value;
   if (e.target.id === 'q') {
     S.q = e.target.value;
     const by = { due: (a, b) => a.rank - b.rank || (a.left ?? 999) - (b.left ?? 999), name: (a, b) => a.name.localeCompare(b.name, 'th'), age: (a, b) => (b.age ?? -1) - (a.age ?? -1), stall: (a, b) => a.code.localeCompare(b.code) };
@@ -810,7 +905,7 @@ document.addEventListener('submit', async (e) => {
   const { error } = await sb.auth.signInWithPassword({ email: f.get('email'), password: f.get('password') });
   if (error) err.textContent = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
 });
-window.addEventListener('hashchange', () => { if (!route().code) S.foalForm = null; render(); });
+window.addEventListener('hashchange', () => { if (!route().code) { S.foalForm = null; S.pregForm = null; } render(); });
 window.addEventListener('online', () => { toast('กลับมาออนไลน์แล้ว กำลังส่งข้อมูล'); flushQueue(); });
 
 /* ═════════════ boot ═════════════ */
