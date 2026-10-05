@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F2F7">
+<title>ดูแลแม่ม้าใกล้คลอด</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#F2F2F7;--card:#FFFFFF;--ink:#1C1C1E;--ink2:#3A3A3C;--ink3:#636366;--line:#E5E5EA;--line2:#D1D1D6;
+  --blue:#0A5BC4;--blue-ink:#0A3F87;--danger:#C4000F;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg)}
+body{color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","IBM Plex Sans Thai",sans-serif;font-size:17px;line-height:1.4;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.86);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1440px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.brand{font-weight:700;font-size:19px}
+.seg{display:flex;padding:4px;gap:4px;border-radius:12px;background:#E9E9EE}
+.seg a{text-decoration:none;min-height:44px;display:flex;align-items:center;padding:0 20px;border-radius:9px;color:var(--ink2);font-size:16px;font-weight:500}
+.seg a[aria-current="page"]{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.top-right{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink3)}
+.sync{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:16px;background:#FFF4C7;color:#5C4700;font-weight:600}
+.sync i{width:8px;height:8px;border-radius:4px;background:#E6B800;display:inline-block}
+.link-btn{background:none;border:none;color:var(--blue);min-height:44px;padding:0 6px;font-size:15px}
+
+/* page */
+.page{max-width:1440px;margin:0 auto;padding:24px 20px 56px;display:flex;flex-direction:column;gap:20px}
+h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+.lead{margin:6px 0 0;color:var(--ink2)}
+.lead strong{color:#C93400}
+.head-row{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill-btn{min-height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--line2);background:#fff;font-size:16px}
+.pill-btn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.panel{background:var(--card);border-radius:18px;padding:14px}
+
+/* status colours */
+.s-n{background:#F2F2F7;border-color:#E5E5EA;color:#636366}
+.s-p{background:#FFFFFF;border-color:#D1D1D6;color:#1C1C1E}
+.s-g{background:#E4F7E9;border-color:#34C759;color:#0B5A23}
+.s-y{background:#FFF4C7;border-color:#E6B800;color:#5C4700}
+.s-o{background:#FFE0BD;border-color:#FF9500;color:#6A3300}
+.s-r{background:#FF3B30;border-color:#D70015;color:#FFFFFF}
+.s-b{background:#E1EEFF;border-color:#007AFF;color:#0A3F87}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(255,59,48,.55)}50%{box-shadow:0 0 0 8px rgba(255,59,48,0)}}
+.s-r.live,.card.live{animation:glow 1.5s ease-in-out infinite}
+
+/* map */
+.map-scroll{overflow-x:auto;padding:2px}
+.map-row{display:grid;gap:6px;margin-bottom:6px}
+.row-letter{display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#8E8E93}
+.cell{display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;gap:2px;min-height:82px;min-width:72px;padding:8px 7px;border-radius:14px;border:2px solid;text-align:left}
+.cell.risk{box-shadow:inset 0 -4px 0 #FF3B30}
+.cell .c-code{font-size:12px;font-weight:600;opacity:.75}
+.cell .c-name{font-size:15px;font-weight:600;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell .c-word{font-size:12.5px;font-weight:700;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell.empty{background:#FAFAFC;border:2px dashed #D1D1D6;color:#8E8E93;cursor:default}
+.legend{display:flex;flex-wrap:wrap;gap:10px}
+.legend span{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:10px;border:2px solid;font-size:15px;font-weight:600}
+.legend .lg-risk{background:#fff;border-color:#D1D1D6;box-shadow:inset 0 -4px 0 #FF3B30;color:var(--ink)}
+
+/* cards */
+.search{display:flex;align-items:center;gap:10px;min-height:52px;padding:0 16px;border-radius:14px;background:#fff;border:1px solid var(--line2);max-width:520px}
+.search input{flex:1;min-width:0;border:none;outline:none;background:transparent;font-size:17px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.card{display:flex;flex-direction:column;text-align:left;padding:0;border:none;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.photo{position:relative;display:flex;align-items:center;justify-content:center;aspect-ratio:16/10;overflow:hidden}
+.photo img{width:100%;height:100%;object-fit:cover}
+.photo .stall-tag{position:absolute;left:10px;top:10px;font-size:15px;font-weight:700;padding:4px 10px;border-radius:9px;background:rgba(255,255,255,.92);color:var(--ink)}
+.card-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px}
+.card-name{font-size:21px;font-weight:700}
+.tag{align-self:flex-start;font-size:15px;font-weight:700;padding:5px 12px;border-radius:10px;border:2px solid}
+.due{font-size:15px;color:var(--ink2)}
+.risk-line{font-size:14px;font-weight:600;color:var(--danger)}
+.empty-state{padding:40px 16px;text-align:center;color:var(--ink3)}
+
+/* modal */
+.overlay{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);overflow:auto;padding:32px 12px;overscroll-behavior:contain}
+.dialog{max-width:720px;margin:0 auto;border-radius:22px;overflow:hidden;background:var(--bg);box-shadow:0 24px 70px rgba(0,0,0,.25)}
+.dlg-head{display:flex;gap:16px;align-items:center;padding:20px;background:#fff}
+.dlg-photo{flex:0 0 auto;width:84px;height:84px;border-radius:18px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.dlg-photo img{width:100%;height:100%;object-fit:cover}
+.dlg-title{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.dlg-title h2{margin:0;font-size:28px;line-height:1.1}
+.close-btn{align-self:flex-start;min-height:44px;padding:0 18px;border:none;border-radius:22px;background:#E9E9EE;font-size:17px;font-weight:600}
+.dlg-body{padding:16px;display:flex;flex-direction:column;gap:14px}
+.when{border-radius:18px;padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.when h3{margin:0;font-size:16px;font-weight:600;opacity:.8}
+.when .big{margin:0;font-size:34px;font-weight:700;line-height:1.15}
+.when .sub{margin:0;font-size:16px;opacity:.9}
+.warn{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:16px;background:#FFE5E3;color:#8A0010}
+.box{background:#fff;border-radius:18px;overflow:hidden}
+.box h3{margin:0;padding:16px 18px 8px;font-size:20px;font-weight:700}
+.todo{list-style:none;margin:0;padding:0}
+.todo li{border-top:1px solid var(--line)}
+.todo button,.todo .info{width:100%;min-height:60px;padding:10px 18px;display:flex;align-items:center;gap:14px;background:none;border:none;text-align:left;font-size:18px}
+.todo .info{color:var(--ink2)}
+.chk{flex:0 0 auto;width:28px;height:28px;border-radius:14px;border:2px solid #AEAEB2;display:flex;align-items:center;justify-content:center;background:#fff}
+.todo button[aria-pressed="true"] .chk{background:#34C759;border-color:#34C759}
+.todo button[aria-pressed="true"] .t{color:#8E8E93;text-decoration:line-through}
+.todo .auto{font-size:13px;color:var(--ink3);margin-left:auto;white-space:nowrap}
+.milk-line{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 18px;font-size:16px;color:var(--ink2)}
+.disclose{width:100%;min-height:56px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;background:none;border:none;color:var(--blue);font-size:17px;font-weight:600}
+.disclose svg{transition:transform .15s}
+.disclose[aria-expanded="true"] svg{transform:rotate(180deg)}
+.details{border-top:1px solid var(--line);padding:14px 18px 18px;display:flex;flex-direction:column;gap:16px;font-size:15px}
+.details dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:8px 16px}
+.details dt{color:var(--ink3)}
+.details dd{margin:0}
+.bars{position:relative;height:70px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;border-bottom:1px solid var(--line2)}
+.bars .thr{position:absolute;left:0;right:0;border-top:1px dashed #FF9500}
+.bars div.b{border-radius:4px 4px 0 0;background:#C7C7CC}
+.bars div.b.hot{background:#FF9500}
+.bar-labels{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;text-align:center;font-size:12.5px;color:var(--ink3)}
+.dlg-foot{padding:4px 16px 18px;display:flex;flex-direction:column;gap:10px}
+.primary{min-height:56px;display:flex;align-items:center;justify-content:center;gap:10px;border:none;border-radius:16px;background:var(--blue);color:#fff;font-size:19px;font-weight:700;text-decoration:none}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.secondary{min-height:52px;border:none;border-radius:16px;background:#fff;font-size:17px;font-weight:600}
+.secondary.danger{color:#C4000F}
+.secondary.blue{color:var(--blue-ink)}
+.foal-form{background:#fff;border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.choice-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+
+/* milk entry */
+.milk-wrap{max-width:480px;margin:0 auto;padding:10px 16px 24px;min-height:100vh;display:flex;flex-direction:column;gap:14px}
+.milk-head{display:flex;align-items:center;gap:10px;min-height:48px}
+.milk-head a{text-decoration:none;min-height:44px;display:flex;align-items:center;gap:4px;padding-right:8px;font-size:17px}
+.milk-head .ttl{flex:1;text-align:center;font-weight:600}
+.milk-head .cnt{min-width:64px;text-align:right;font-size:14px;color:var(--ink2)}
+.who{background:#fff;border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.who .ph{width:48px;height:48px;border-radius:12px;flex:0 0 auto;overflow:hidden}
+.who .ph img{width:100%;height:100%;object-fit:cover}
+.who b{display:block;font-size:22px;line-height:1.15}
+.step h2{margin:0 0 6px;font-size:16px;font-weight:600}
+.opts{display:grid;gap:6px}
+.opt{min-height:52px;border-radius:12px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:500;padding:4px;line-height:1.2}
+.opt[aria-pressed="true"]{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:700}
+.notice{padding:12px 14px;border-radius:14px;background:#FFE0BD;color:#6A3300;font-size:16px}
+.hint{text-align:center;font-size:13px;color:var(--ink3)}
+
+/* login */
+.login{max-width:400px;margin:12vh auto 0;padding:0 20px;display:flex;flex-direction:column;gap:14px}
+.login label{display:flex;flex-direction:column;gap:6px;font-size:16px;font-weight:600}
+.login input{min-height:52px;padding:0 14px;border-radius:12px;border:1px solid var(--line2);background:#fff;font-size:17px;font-weight:400}
+.err{color:var(--danger);font-size:15px;min-height:1.4em}
+
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:100;max-width:90vw;padding:12px 18px;border-radius:14px;background:rgba(28,28,30,.92);color:#fff;font-size:16px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+
+@media (max-width:640px){
+  h1{font-size:26px}
+  .overlay{padding:0}
+  .dialog{border-radius:0;min-height:100%}
+  .seg a{padding:0 14px}
+}
+</style>
+</head>
+<body>
+<div id="app" aria-live="polite"><p class="empty-state">กำลังโหลด…</p></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+/* ── ตั้งค่า ──
+   ใช้ได้เฉพาะ publishable / anon key เท่านั้น
+   ห้ามใส่ secret key หรือ service_role ในไฟล์นี้ เพราะเบราว์เซอร์ทุกเครื่องเห็นได้ */
+const SUPABASE_URL = 'https://jycozjzcuoczohknpsuf.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_KxKav-PpygzXoyPO7nfFTA_5DRgdzMP';
+const TZ = 'Asia/Bangkok';
+
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+
+/* ── ค่าคงที่ ── */
+const CA = ['<50', '50–100', '100–200', '200–400', '400+'];
+const PH = ['7.4+', '7.0', '6.8', '6.6', '6.4', '6.2 ลงไป'];
+const UDDER = ['ปกติ', 'เริ่มขยาย', 'เต็มตึง'];
+const MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+const TINTS = ['#B8A28C', '#A0715A', '#C7C7CC', '#8C7A6B', '#C49A6C'];
+const RANK = { r: 0, o: 1, y: 2, g: 3, p: 4, b: 5, n: 6 };
+const LABEL = { p: 'ท้อง ยังไม่ถึงกำหนด', g: 'ใกล้กำหนด เฝ้าดู', y: 'น้ำนมเริ่มเปลี่ยน', o: 'ใกล้คลอดมาก', r: 'กำลังคลอด', b: 'คลอดแล้ว', n: 'ไม่ท้อง' };
+const PILL = { p: 'ท้อง', g: 'เฝ้าดู', y: 'มีสัญญาณ', o: 'ใกล้คลอดมาก', r: 'กำลังคลอด', b: 'คลอดแล้ว', n: 'ไม่ท้อง' };
+const QKEY = 'fm_pending_obs_v1';
+
+/* ── state ── */
+const S = {
+  session: null, staff: null, loaded: false,
+  stalls: [], mares: [], preg: [], hist: [], obs: [], checks: [], settings: {},
+  views: [], barn: null, sort: 'due', q: '', details: false, foalForm: null,
+  milk: { ca: null, ph: null, udder: null, waxing: false, leak: false },
+  queue: loadQueue()
+};
+
+/* ── helpers ── */
+const $app = document.getElementById('app');
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ymd = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d);
+const today = () => ymd(new Date());
+const dayNum = (s) => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / 864e5;
+const diffDays = (a, b) => Math.round(dayNum(b) - dayNum(a));
+const offDate = (off) => { const t = new Date((dayNum(today()) + off) * 864e5); return t.getUTCDate() + ' ' + MON[t.getUTCMonth()]; };
+const fmtDate = (s) => { const t = new Date(dayNum(s) * 864e5); return t.getUTCDate() + ' ' + MON[t.getUTCMonth()] + ' ' + (t.getUTCFullYear() + 543); };
+const hhmm = (iso) => new Intl.DateTimeFormat('th-TH', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso));
+const hourBkk = (iso) => +new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hour12: false }).format(new Date(iso));
+const setting = (k, d) => { const v = S.settings[k]; return v == null ? d : Number(v); };
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, () => (Math.random() * 16 | 0).toString(16)));
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+function loadQueue() { try { return JSON.parse(localStorage.getItem(QKEY) || '[]'); } catch { return []; } }
+function saveQueue() { try { localStorage.setItem(QKEY, JSON.stringify(S.queue)); } catch {} }
+
+const HORSE = (stroke) => `<svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 38V26c0-6 3-11 8-14l2-7 3 5c5 3 8 8 7 14l-3 4h-5l-3-4-3 14"/><circle cx="26" cy="17" r="1"/></svg>`;
+const CHECK = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+const photoHtml = (v) => v.photo_url
+  ? `<img src="${esc(v.photo_url)}" alt="" loading="lazy">`
+  : HORSE('rgba(255,255,255,.8)');
+
+/* ── routing: #/map, #/map/A06, #/list, #/list/A06, #/milk/A06 ── */
+function route() {
+  const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  const view = ['map', 'list', 'milk'].includes(parts[0]) ? parts[0] : 'map';
+  return { view, code: parts[1] ? decodeURIComponent(parts[1]) : null };
+}
+const go = (h) => { if (location.hash !== h) location.hash = h; else render(); };
+
+/* ═════════════ data ═════════════ */
+async function loadAll() {
+  const since = ymd(new Date(Date.now() - 8 * 864e5));
+  const res = await Promise.all([
+    sb.from('stalls').select('*').order('row_letter').order('col'),
+    sb.from('mares').select('*'),
+    sb.from('pregnancies').select('*').or(`status.eq.active,foaled_at.gte.${since}`),
+    sb.from('foaling_records').select('mare_id,pregnancy_id,foaled_at,gestation_days,foal_sex,complications').order('foaled_at', { ascending: false }),
+    sb.from('daily_observations').select('*').gte('observed_at', since).order('observed_at'),
+    sb.from('task_checks').select('*').eq('done_on', today()),
+    sb.from('settings').select('*')
+  ]);
+  const bad = res.find((r) => r.error);
+  if (bad) { toast('โหลดข้อมูลไม่สำเร็จ: ' + bad.error.message); if (!S.loaded) render(); return; }
+  [S.stalls, S.mares, S.preg, S.hist, S.obs, S.checks] = res.slice(0, 6).map((r) => r.data);
+  S.settings = Object.fromEntries(res[6].data.map((r) => [r.key, r.value]));
+  // ผลที่ยังค้างส่ง (offline) ให้เห็นในหน้าจอด้วย
+  for (const q of S.queue) if (!S.obs.some((o) => o.client_id === q.client_id)) S.obs.push(q);
+  if (!S.barn) S.barn = S.stalls[0]?.barn ?? null;
+  S.loaded = true;
+  compute();
+  render();
+}
+
+let reloadTimer;
+const reloadSoon = () => { clearTimeout(reloadTimer); reloadTimer = setTimeout(loadAll, 700); };
+
+function subscribe() {
+  const ch = sb.channel('foaling-monitor');
+  for (const table of ['daily_observations', 'pregnancies', 'task_checks', 'foaling_records', 'mares']) {
+    ch.on('postgres_changes', { event: '*', schema: 'public', table }, reloadSoon);
+  }
+  ch.subscribe();
+  setInterval(loadAll, 5 * 60 * 1000); // เผื่อข้ามวัน
+}
+
+/* ═════════════ Level 1 + 1.5 ═════════════ */
+function compute() {
+  const t = today();
+  const mean0 = setting('breed_mean_days', 340), k = setting('prior_weight', 2), colt = setting('colt_extra_days', 2);
+  const milkStart = setting('milk_start_day', 310), caNear = setting('ca_near_level', 3), phNear = setting('ph_near_level', 4);
+  const stallBy = Object.fromEntries(S.stalls.map((s) => [s.code, s]));
+
+  S.views = S.mares.map((m, idx) => {
+    const active = S.preg.find((p) => p.mare_id === m.id && p.status === 'active');
+    const foaled = S.preg.find((p) => p.mare_id === m.id && p.status === 'foaled' && p.foaled_at && Date.now() - new Date(p.foaled_at) < 24 * 3600e3);
+    const preg = active || foaled || null;
+    const hist = S.hist.filter((h) => h.mare_id === m.id && (!preg || h.pregnancy_id !== preg.id));
+    const n = hist.length;
+    const histMean = n ? hist.reduce((a, h) => a + h.gestation_days, 0) / n : mean0;
+    const obs = preg ? S.obs.filter((o) => o.pregnancy_id === preg.id).sort((a, b) => new Date(a.observed_at) - new Date(b.observed_at)) : [];
+    const last = obs[obs.length - 1];
+    const prev = obs[obs.length - 2];
+    const age = m.birth_date ? Math.floor(diffDays(m.birth_date, t) / 365.25) : null;
+
+    let st = 'n', day = null, mu = null, sd = null, left = null;
+    if (foaled && !active) st = 'b';
+    if (active) {
+      day = diffDays(active.ovulation_date, t);
+      mu = (n * histMean + k * mean0) / (n + k) + (active.fetal_sex === 'M' ? colt : 0);
+      sd = n >= 3 ? 5.5 : n >= 1 ? 7 : 9;
+      left = Math.round(mu - day);
+      const recent = last && diffDays(ymd(new Date(last.observed_at)), t) <= 1;
+      if (active.labor_started_at) st = 'r';
+      else if (recent && ((last.ca_level ?? -1) >= caNear || (last.ph_level ?? -1) >= phNear || last.milk_leaking)) st = 'o';
+      else if (recent && ((last.ca_level ?? 0) >= 2 || (last.udder === 2 && last.waxing) || (prev && last.ca_level > prev.ca_level && last.ca_level >= 1 && prev.ca_level >= 1))) st = 'y';
+      else if (day >= milkStart || left - 1.28 * sd <= 7) st = 'g';
+      else st = 'p';
+    }
+    const word = { p: null, g: null, y: 'มีสัญญาณ', o: 'ใน 3 วัน', r: 'กำลังคลอด', b: 'คลอดแล้ว', n: 'ไม่ท้อง' }[st]
+      ?? (left > 0 ? 'อีก ' + left + ' วัน' : left === 0 ? 'ครบกำหนด' : 'เลย ' + -left + ' วัน');
+    const todayObs = obs.filter((o) => ymd(new Date(o.observed_at)) === t);
+    const milking = ['g', 'y', 'o'].includes(st) && day >= milkStart;
+    return {
+      ...m, stall: stallBy[m.stall_code] || null, code: m.stall_code || '—', preg, active, hist, n, st, day, mu, sd, left, word,
+      obs, last, todayObs, milking, needMilk: milking ? (st === 'g' ? 1 : 2) : 0,
+      age, rank: RANK[st], risk: !!m.risk_note, tint: TINTS[idx % TINTS.length],
+      overdue: day != null && day >= setting('overdue_day', 370)
+    };
+  });
+}
+
+/* ═════════════ render ═════════════ */
+function render() {
+  if (!S.session) return renderLogin();
+  if (!S.staff) { $app.innerHTML = `<div class="login"><h1>ยังไม่มีสิทธิ์ใช้งาน</h1><p class="lead">บัญชี ${esc(S.session.user.email)} ยังไม่ได้ถูกเพิ่มในทีม ให้ผู้จัดการเพิ่มชื่อก่อน</p><button class="secondary" data-act="logout">ออกจากระบบ</button></div>`; return; }
+  if (!S.loaded) { $app.innerHTML = '<p class="empty-state">กำลังโหลด…</p>'; return; }
+  const r = route();
+  const scrollY = window.scrollY;
+  if (r.view === 'milk') {
+    if (S.milkCode !== r.code) { S.milkCode = r.code; S.milk = { ca: null, ph: null, udder: null, waxing: false, leak: false }; }
+    document.body.style.overflow = '';
+    $app.innerHTML = renderMilk(r.code); return;
+  }
+  $app.innerHTML = topBar(r.view) + (r.view === 'list' ? renderList() : renderMap()) + (r.code ? renderModal(r.code, r.view) : '');
+  document.body.style.overflow = r.code ? 'hidden' : '';
+  window.scrollTo(0, scrollY);
+}
+
+function topBar(view) {
+  const pending = S.queue.length;
+  return `<header class="top"><div class="top-in">
+    <span class="brand">ดูแลแม่ม้าใกล้คลอด</span>
+    <nav class="seg" aria-label="เลือกหน้า">
+      <a href="#/map" ${view === 'map' ? 'aria-current="page"' : ''}>ผังคอก</a>
+      <a href="#/list" ${view === 'list' ? 'aria-current="page"' : ''}>รายชื่อม้า</a>
+    </nav>
+    <div class="top-right">
+      ${pending ? `<span class="sync"><i></i>รอส่ง ${pending}</span>` : ''}
+      <span>${esc(S.staff.display_name)}</span>
+      <button class="link-btn" data-act="logout">ออก</button>
+    </div>
+  </div></header>`;
+}
+
+function barnPicker() {
+  const barns = [...new Set(S.stalls.map((s) => s.barn))];
+  return `<div class="pills" role="group" aria-label="เลือกโรงเรือน">${barns.map((b) =>
+    `<button class="pill-btn" data-act="barn" data-v="${esc(b)}" aria-pressed="${b === S.barn}">${esc(b)}</button>`).join('')}</div>`;
+}
+
+function renderMap() {
+  const stalls = S.stalls.filter((s) => s.barn === S.barn);
+  const byStall = Object.fromEntries(S.views.filter((v) => v.stall_code).map((v) => [v.stall_code, v]));
+  const rows = [...new Set(stalls.map((s) => s.row_letter))];
+  const maxCol = Math.max(1, ...stalls.map((s) => s.col));
+  const urgent = S.views.filter((v) => v.stall?.barn === S.barn && v.rank <= 2).length;
+  const rowsHtml = rows.map((L) => {
+    const cells = [];
+    for (let c = 1; c <= maxCol; c++) {
+      const s = stalls.find((x) => x.row_letter === L && x.col === c);
+      if (!s) { cells.push('<div></div>'); continue; }
+      const v = byStall[s.code];
+      if (!v) { cells.push(`<div class="cell empty" aria-label="คอก ${esc(s.code)} ว่าง"><span class="c-code">${esc(s.code)}</span><span class="c-word" style="font-weight:400">ว่าง</span></div>`); continue; }
+      cells.push(`<button class="cell s-${v.st}${v.st === 'r' ? ' live' : ''}${v.risk ? ' risk' : ''}" data-act="open" data-code="${esc(v.code)}"
+        aria-label="คอก ${esc(v.code)} ${esc(v.name)} ${LABEL[v.st]}${v.risk ? ' ม้าเสี่ยง' : ''}">
+        <span class="c-code">${esc(v.code)}</span><span class="c-name">${esc(v.name)}</span><span class="c-word">${esc(v.word)}</span></button>`);
+    }
+    return `<div class="map-row" style="grid-template-columns:24px repeat(${maxCol},minmax(72px,1fr))"><div class="row-letter">${esc(L)}</div>${cells.join('')}</div>`;
+  }).join('');
+  const legend = ['p', 'g', 'y', 'o', 'r', 'b', 'n'].map((k) => `<span class="s-${k}">${LABEL[k]}</span>`).join('') + '<span class="lg-risk">แถบแดงล่าง = ม้าเสี่ยง</span>';
+  return `<main class="page">
+    <div class="head-row">
+      <div><h1>${esc(S.barn || 'ผังคอก')}</h1>
+      <p class="lead">${urgent ? `วันนี้มีม้าที่ต้องดูใกล้ชิด <strong>${urgent} ตัว</strong> · ` : ''}แตะที่คอกเพื่อดูรายละเอียด</p></div>
+      ${barnPicker()}
+    </div>
+    <div class="panel map-scroll">${rowsHtml || '<p class="empty-state">ยังไม่มีคอกในโรงเรือนนี้</p>'}</div>
+    <section class="panel" aria-labelledby="lg-h"><h2 id="lg-h" style="margin:0 0 12px;font-size:16px;color:var(--ink2)">สีบอกว่าใกล้คลอดแค่ไหน</h2><div class="legend">${legend}</div></section>
+  </main>`;
+}
+
+function dueText(v) {
+  if (v.st === 'r') return 'กำลังคลอดตอนนี้';
+  if (v.st === 'o') return 'น่าจะคลอดภายใน 3 วัน';
+  if (v.st === 'y') return 'น้ำนมเริ่มเปลี่ยน · อีกไม่กี่วัน';
+  if (v.st === 'b') return 'คลอดเมื่อ ' + hhmm(v.preg.foaled_at) + ' น.';
+  if (v.st === 'n') return 'ไม่ได้ตั้งท้องในฤดูนี้';
+  return 'คาดคลอดประมาณ ' + offDate(v.left) + ' (' + v.word + ')';
+}
+
+function renderList() {
+  const by = {
+    due: (a, b) => a.rank - b.rank || (a.left ?? 999) - (b.left ?? 999),
+    name: (a, b) => a.name.localeCompare(b.name, 'th'),
+    age: (a, b) => (b.age ?? -1) - (a.age ?? -1),
+    stall: (a, b) => a.code.localeCompare(b.code)
+  };
+  const sorts = [['due', 'ใกล้คลอดก่อน'], ['name', 'ชื่อ'], ['age', 'อายุมากก่อน'], ['stall', 'เลขคอก']];
+  return `<main class="page">
+    <div><h1>รายชื่อม้า</h1><p class="lead">${S.views.length} ตัว · แตะที่การ์ดเพื่อดูรายละเอียด</p></div>
+    <label class="search">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#636366" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6"/><path d="M13 13l5 5"/></svg>
+      <span class="sr">ค้นหาชื่อม้าหรือเลขคอก</span>
+      <input id="q" type="search" placeholder="พิมพ์ชื่อม้า หรือเลขคอก เช่น A06" value="${esc(S.q)}" autocomplete="off">
+    </label>
+    <div class="pills" role="group" aria-label="เรียงตาม"><span style="align-self:center;color:var(--ink2);margin-right:4px">เรียงตาม</span>
+      ${sorts.map(([k, l]) => `<button class="pill-btn" data-act="sort" data-v="${k}" aria-pressed="${S.sort === k}">${l}</button>`).join('')}
+    </div>
+    <div class="grid" id="cards">${cardsHtml(by[S.sort])}</div>
+  </main>`;
+}
+
+function cardsHtml(cmp) {
+  const q = S.q.trim().toLowerCase();
+  const list = S.views.filter((v) => !q || v.name.toLowerCase().includes(q) || v.code.toLowerCase().includes(q)).sort(cmp);
+  if (!list.length) return '<p class="empty-state" style="grid-column:1/-1">ไม่พบม้าที่ค้นหา</p>';
+  return list.map((v) => `<button class="card${v.st === 'r' ? ' live' : ''}" data-act="open" data-code="${esc(v.code)}" aria-label="คอก ${esc(v.code)} ${esc(v.name)} ${LABEL[v.st]}">
+    <span class="photo" style="background:${v.tint}">${photoHtml(v)}<span class="stall-tag">คอก ${esc(v.code)}</span></span>
+    <span class="card-body">
+      <span class="card-name">${esc(v.name)}</span>
+      <span class="tag s-${v.st}">${PILL[v.st]}</span>
+      <span class="due">${esc(dueText(v))}</span>
+      ${v.risk ? '<span class="risk-line">⚠ ม้าเสี่ยง · เคยมีปัญหาตอนคลอด</span>' : ''}
+    </span></button>`).join('');
+}
+
+/* ── tasks ── */
+function tasksFor(v) {
+  const am = v.todayObs.some((o) => hourBkk(o.observed_at) < 12);
+  const pm = v.todayObs.some((o) => hourBkk(o.observed_at) >= 12);
+  const any = v.todayObs.length > 0;
+  const T = (key, text, auto) => ({ key, text, auto });
+  switch (v.st) {
+    case 'p': return { info: ['ยังไม่ต้องทำอะไรเพิ่ม', 'เริ่มตรวจน้ำนมเมื่อถึง ' + offDate(setting('milk_start_day', 310) - v.day)] };
+    case 'g': return { list: v.milking ? [T('milk', 'ตรวจน้ำนมวันละ 1 ครั้ง (ตอนเย็น)', any), T('udder', 'ดูเต้านมและโคนหาง')] : [T('udder', 'ดูเต้านมและโคนหาง')] };
+    case 'y': return { list: [T('milk_am', 'ตรวจน้ำนมเช้า', am), T('milk_pm', 'ตรวจน้ำนมเย็น', pm), T('udder', 'ดูเต้านมและโคนหาง')] };
+    case 'o': return { list: [T('milk_am', 'ตรวจน้ำนมเช้า', am), T('milk_pm', 'ตรวจน้ำนมเย็น', pm), T('move', 'ย้ายเข้าคอกคลอด'), T('kit', 'เตรียมอุปกรณ์ทำคลอด'), T('leak', 'ถ้าเห็นน้ำนมไหลเอง ให้โทรบอกสัตวแพทย์')] };
+    case 'r': return { list: [T('call', 'โทรหาสัตวแพทย์'), T('stay', 'อยู่กับม้า ห้ามทิ้งไว้คนเดียว'), T('time', 'จดเวลาที่เห็นลูกม้าออกมา')] };
+    case 'b': return { list: [T('stand', 'ลูกม้ายืนได้ภายใน 1 ชั่วโมง'), T('nurse', 'ลูกม้าดูดนมภายใน 2 ชั่วโมง'), T('placenta', 'รกออกครบภายใน 3 ชั่วโมง')] };
+    default: return { info: ['ไม่มีงานวันนี้'] };
+  }
+}
+
+function whenFor(v) {
+  const range = v.sd ? ' · อาจเร็วหรือช้ากว่านี้ได้ประมาณ ' + Math.round(1.28 * v.sd) + ' วัน' : '';
+  switch (v.st) {
+    case 'p': return ['คาดว่าจะคลอด', 'ประมาณ ' + offDate(v.left), (v.left > 0 ? 'อีกราว ' + v.left + ' วัน' : v.left === 0 ? 'ครบกำหนดวันนี้' : 'เลยกำหนดมา ' + -v.left + ' วัน') + range];
+    case 'g': return ['คาดว่าจะคลอด', 'ประมาณ ' + offDate(v.left), (v.left > 0 ? 'อีกราว ' + v.left + ' วัน' : v.left === 0 ? 'ครบกำหนดวันนี้' : 'เลยกำหนดมา ' + -v.left + ' วัน') + ' · เริ่มเฝ้าดูใกล้ชิด'];
+    case 'y': return ['คาดว่าจะคลอด', 'อีกไม่กี่วัน', 'น้ำนมเริ่มเปลี่ยนแล้ว · ตรวจน้ำนมเช้าและเย็น'];
+    case 'o': return ['คาดว่าจะคลอด', 'ภายใน 3 วัน', 'ประมาณ ' + offDate(0) + ' – ' + offDate(3) + ' · น้ำนมเปลี่ยนชัดเจนแล้ว'];
+    case 'r': return ['ตอนนี้', 'กำลังคลอด', 'แจ้งเมื่อ ' + hhmm(v.active.labor_started_at) + ' น. · อยู่กับม้าและโทรหาสัตวแพทย์'];
+    case 'b': return ['คลอดแล้ว', 'วันนี้ ' + hhmm(v.preg.foaled_at) + ' น.', 'ติดตามลูกม้าตามรายการด้านล่าง'];
+    default: return ['สถานะ', 'ไม่ได้ตั้งท้อง', 'ไม่ต้องตรวจน้ำนมในฤดูนี้'];
+  }
+}
+
+function renderModal(code, view) {
+  const v = S.views.find((x) => x.code === code);
+  if (!v) return '';
+  const [wt, wb, ws] = whenFor(v);
+  const tk = tasksFor(v);
+  const checked = (key) => v.preg && S.checks.some((c) => c.pregnancy_id === v.preg.id && c.task_key === key);
+  const todo = tk.info
+    ? tk.info.map((t) => `<li><div class="info">${esc(t)}</div></li>`).join('')
+    : tk.list.map((t) => {
+        const on = t.auto || checked(t.key);
+        return `<li><button ${t.auto ? 'disabled' : `data-act="task" data-key="${t.key}" data-code="${esc(v.code)}"`} aria-pressed="${!!on}">
+          <span class="chk">${on ? CHECK : ''}</span><span class="t">${esc(t.text)}</span>${t.auto ? '<span class="auto">บันทึกแล้ว</span>' : ''}</button></li>`;
+      }).join('');
+
+  const last = v.last;
+  const milkWord = !last ? '' : last.ca_level >= 3 ? ['น้ำนมเปลี่ยนชัด', 's-o'] : last.ca_level >= 2 ? ['เริ่มเปลี่ยน', 's-y'] : ['ปกติ', 's-g'];
+  const lastWhen = !last ? '' : (ymd(new Date(last.observed_at)) === today() ? 'วันนี้ ' : fmtDate(ymd(new Date(last.observed_at))) + ' ') + hhmm(last.observed_at);
+
+  // details for vet
+  let details = '';
+  if (S.details) {
+    const days7 = Array.from({ length: 7 }, (_, i) => ymd(new Date(Date.now() - (6 - i) * 864e5)));
+    const per = days7.map((d) => v.obs.filter((o) => ymd(new Date(o.observed_at)) === d).pop());
+    const bars = per.map((o) => o ? `<div class="b${o.ca_level >= setting('ca_near_level', 3) ? ' hot' : ''}" style="height:${Math.max(4, ((o.ca_level ?? 0) + 1) * 14)}px"></div>` : '<div></div>').join('');
+    const labels = per.map((o, i) => `<span>${offDate(i - 6)}<br>${o ? esc(CA[o.ca_level] ?? '–') + (o.ph_level != null ? ' · ' + esc(PH[o.ph_level]) : '') : '–'}</span>`).join('');
+    const hist = v.hist.slice(0, 5).map((h) => `<li>${new Date(h.foaled_at).getFullYear() + 543} · ${h.gestation_days} วัน · ลูก${h.foal_sex === 'F' ? 'เมีย' : h.foal_sex === 'M' ? 'ผู้' : '–'}${h.complications ? ` · <b style="color:var(--danger)">${esc(h.complications)}</b>` : ''}</li>`).join('');
+    details = `<div class="details">
+      ${v.active ? `<dl>
+        <dt>อายุครรภ์</dt><dd><b>Day ${v.day}</b>${v.overdue ? ' <b style="color:var(--danger)">· เกินกำหนดนาน</b>' : ''}</dd>
+        <dt>วันตกไข่</dt><dd>${fmtDate(v.active.ovulation_date)}</dd>
+        <dt>คาดคลอด (ค่ากลาง)</dt><dd>${offDate(v.left)} · ช่วง 80% ${offDate(Math.round(v.left - 1.28 * v.sd))} – ${offDate(Math.round(v.left + 1.28 * v.sd))}</dd>
+        <dt>เพศลูกในท้อง</dt><dd>${v.active.fetal_sex === 'M' ? 'ผู้' : v.active.fetal_sex === 'F' ? 'เมีย' : 'ไม่ทราบ'}</dd>
+        <dt>พันธุ์ / อายุ</dt><dd>${esc(v.breed || '–')} · ${v.age ?? '–'} ปี</dd>
+        <dt>คลอดมาแล้ว</dt><dd>${v.n ? v.n + ' ครั้ง (เฉลี่ย ' + Math.round(v.hist.reduce((a, h) => a + h.gestation_days, 0) / v.n) + ' วัน)' : 'ท้องแรก'}</dd>
+      </dl>` : ''}
+      ${v.obs.length ? `<div><div style="color:var(--ink3);margin-bottom:8px">แคลเซียม 7 วัน (เส้นประ = 200 ppm)</div>
+        <div class="bars"><div class="thr" style="bottom:${(setting('ca_near_level', 3) + 1) * 14}px"></div>${bars}</div>
+        <div class="bar-labels" style="margin-top:6px">${labels}</div></div>` : ''}
+      ${hist ? `<div><div style="color:var(--ink3);margin-bottom:6px">ประวัติการคลอด</div><ul style="margin:0;padding-left:18px">${hist}</ul></div>` : ''}
+    </div>`;
+  }
+
+  const foalForm = S.foalForm && S.foalForm.code === v.code ? `<div class="foal-form">
+      <b>ยืนยันว่า ${esc(v.name)} คลอดแล้ว</b>
+      <span style="color:var(--ink2)">ลูกม้าเป็นเพศอะไร</span>
+      <div class="choice-row">${[['M', 'ผู้'], ['F', 'เมีย'], ['', 'ยังไม่ทราบ']].map(([k, l]) =>
+        `<button class="opt" data-act="foalsex" data-v="${k}" aria-pressed="${S.foalForm.sex === k}">${l}</button>`).join('')}</div>
+      <div class="two"><button class="secondary" data-act="foalcancel" style="background:#F2F2F7">ยกเลิก</button>
+      <button class="primary" data-act="foalsave" data-code="${esc(v.code)}" style="min-height:52px;font-size:17px">ยืนยัน คลอดแล้ว</button></div>
+    </div>` : '';
+
+  const actions = v.active ? `
+    ${v.milking ? `<a class="primary" href="#/milk/${encodeURIComponent(v.code)}">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3C7.5 7.5 5.5 10.5 5.5 13.5a5.5 5.5 0 0 0 11 0C16.5 10.5 14.5 7.5 11 3z"/></svg>บันทึกน้ำนม</a>` : ''}
+    <div class="two">
+      ${v.st === 'r' ? '<span></span>' : `<button class="secondary danger" data-act="labor" data-code="${esc(v.code)}">ม้ากำลังคลอด</button>`}
+      <button class="secondary blue" data-act="foalopen" data-code="${esc(v.code)}">ม้าคลอดแล้ว</button>
+    </div>` : '';
+
+  return `<div class="overlay" data-act="backdrop" data-view="${view}">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-name">
+      <div class="dlg-head">
+        <div class="dlg-photo" style="background:${v.tint}">${photoHtml(v)}</div>
+        <div class="dlg-title"><h2 id="dlg-name">${esc(v.name)}</h2><div style="color:var(--ink2)">คอก ${esc(v.code)}</div><span class="tag s-${v.st}">${PILL[v.st]}</span></div>
+        <button class="close-btn" data-act="close" data-view="${view}">ปิด</button>
+      </div>
+      <div class="dlg-body">
+        <section class="when s-${v.st}" style="border:none"><h3>${esc(wt)}</h3><p class="big">${esc(wb)}</p><p class="sub">${esc(ws)}</p></section>
+        ${v.risk ? `<div class="warn" role="note"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C4000F" stroke-width="2" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5" stroke-linecap="round"/></svg><span><b>ม้าเสี่ยง</b> · ${esc(v.risk_note)} ให้โทรบอกสัตวแพทย์ทันทีที่เริ่มคลอด</span></div>` : ''}
+        ${foalForm}
+        <section class="box"><h3>ต้องทำวันนี้</h3><ul class="todo">${todo}</ul></section>
+        ${last ? `<div class="box milk-line"><span>ตรวจน้ำนมล่าสุด · ${esc(lastWhen)}</span><span class="tag ${milkWord[1]}">${milkWord[0]}</span></div>` : ''}
+        <section class="box">
+          <button class="disclose" data-act="details" aria-expanded="${S.details}"><span>ข้อมูลละเอียดสำหรับสัตวแพทย์</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+          ${details}
+        </section>
+      </div>
+      <div class="dlg-foot">${actions}</div>
+    </div>
+  </div>`;
+}
+
+/* ── milk entry ── */
+function milkQueue() {
+  return S.views.filter((v) => v.milking && v.todayObs.length < v.needMilk).sort((a, b) => a.rank - b.rank || a.code.localeCompare(b.code));
+}
+function renderMilk(code) {
+  const v = S.views.find((x) => x.code === code);
+  if (!v || !v.active) return `<div class="milk-wrap"><div class="milk-head"><a href="#/map">‹ กลับ</a></div><p class="empty-state">ไม่พบม้าที่ตั้งท้องในคอก ${esc(code || '')}</p></div>`;
+  const all = S.views.filter((x) => x.milking);
+  const left = milkQueue();
+  const m = S.milk;
+  const opts = (arr, field, cols) => `<div class="opts" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${arr.map((l, i) =>
+    `<button class="opt" data-act="mpick" data-f="${field}" data-v="${i}" aria-pressed="${m[field] === i}">${l}</button>`).join('')}</div>`;
+  const near = (m.ca ?? -1) >= setting('ca_near_level', 3) || (m.ph ?? -1) >= setting('ph_near_level', 4) || m.leak;
+  return `<div class="milk-wrap">
+    <div class="milk-head">
+      <a href="#/map/${encodeURIComponent(v.code)}"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg>กลับ</a>
+      <span class="ttl">บันทึกน้ำนม</span>
+      <span class="cnt">เหลือ ${left.length} / ${all.length}</span>
+    </div>
+    <section class="who" aria-label="ม้าตัวนี้"><span class="ph" style="background:${v.tint}">${v.photo_url ? `<img src="${esc(v.photo_url)}" alt="">` : ''}</span>
+      <span><b>${esc(v.name)}</b><span style="color:var(--ink2);font-size:15px">คอก ${esc(v.code)} · ${PILL[v.st]}</span></span></section>
+    <section class="step"><h2>1. แคลเซียม · ดูสีที่แถบทดสอบ</h2>${opts(CA, 'ca', 5)}</section>
+    <section class="step"><h2>2. ค่า pH</h2>${opts(PH, 'ph', 3)}</section>
+    <section class="step"><h2>3. เต้านม</h2>${opts(UDDER, 'udder', 3)}</section>
+    <section class="step"><h2>4. เห็นสิ่งนี้ไหม (แตะถ้าเห็น)</h2><div class="opts" style="grid-template-columns:1fr 1fr">
+      <button class="opt" data-act="mtoggle" data-f="waxing" aria-pressed="${m.waxing}">ขี้ผึ้งที่หัวนม</button>
+      <button class="opt" data-act="mtoggle" data-f="leak" aria-pressed="${m.leak}">น้ำนมไหลเอง</button></div></section>
+    ${near ? '<div class="notice" role="status"><b>ใกล้คลอดมาก</b> · ระบบจะขึ้นสีส้มให้ทุกคนเห็นทันที</div>' : ''}
+    <span style="flex:1"></span>
+    <button class="primary" data-act="msave" data-code="${esc(v.code)}">บันทึก แล้วไปตัวถัดไป</button>
+    <span class="hint">ไม่มีเน็ตก็บันทึกได้ ระบบจะส่งให้เองเมื่อมีสัญญาณ${S.queue.length ? ' · รอส่ง ' + S.queue.length + ' รายการ' : ''}</span>
+  </div>`;
+}
+
+function renderLogin() {
+  $app.innerHTML = `<form class="login" id="login">
+    <h1>ดูแลแม่ม้าใกล้คลอด</h1>
+    <p class="lead" style="margin:0">เข้าสู่ระบบด้วยบัญชีที่ผู้จัดการให้ไว้</p>
+    <label>อีเมล<input name="email" type="email" autocomplete="username" required></label>
+    <label>รหัสผ่าน<input name="password" type="password" autocomplete="current-password" required></label>
+    <div class="err" id="login-err"></div>
+    <button class="primary" type="submit">เข้าสู่ระบบ</button>
+  </form>`;
+}
+
+/* ═════════════ actions ═════════════ */
+async function flushQueue() {
+  if (!S.queue.length || !navigator.onLine) return;
+  const batch = S.queue.slice();
+  const rows = batch.map(({ client_id, pregnancy_id, observed_at, ca_level, ph_level, udder, waxing, milk_leaking }) =>
+    ({ client_id, pregnancy_id, observed_at, ca_level, ph_level, udder, waxing, milk_leaking }));
+  const { error } = await sb.from('daily_observations').upsert(rows, { onConflict: 'client_id', ignoreDuplicates: true });
+  if (error) { if (navigator.onLine) toast('ส่งข้อมูลไม่สำเร็จ จะลองใหม่อัตโนมัติ'); return; }
+  const sent = new Set(batch.map((b) => b.client_id));
+  S.queue = S.queue.filter((q) => !sent.has(q.client_id));
+  saveQueue(); render();
+}
+
+async function act(el) {
+  const a = el.dataset.act;
+  const r = route();
+  const v = el.dataset.code ? S.views.find((x) => x.code === el.dataset.code) : null;
+
+  if (a === 'open') { S.details = false; S.foalForm = null; return go(`#/${r.view}/${encodeURIComponent(el.dataset.code)}`); }
+  if (a === 'close') return go(`#/${el.dataset.view}`);
+  if (a === 'barn') { S.barn = el.dataset.v; return render(); }
+  if (a === 'sort') { S.sort = el.dataset.v; return render(); }
+  if (a === 'details') { S.details = !S.details; return render(); }
+  if (a === 'logout') { await sb.auth.signOut(); return; }
+
+  if (a === 'task' && v?.preg) {
+    const key = el.dataset.key, pid = v.preg.id, d = today();
+    const has = S.checks.find((c) => c.pregnancy_id === pid && c.task_key === key);
+    if (has) {
+      S.checks = S.checks.filter((c) => c !== has); render();
+      const { error } = await sb.from('task_checks').delete().match({ pregnancy_id: pid, task_key: key, done_on: d });
+      if (error) { toast('บันทึกไม่สำเร็จ ลองอีกครั้ง'); reloadSoon(); }
+    } else {
+      S.checks.push({ pregnancy_id: pid, task_key: key, done_on: d }); render();
+      const { error } = await sb.from('task_checks').insert({ pregnancy_id: pid, task_key: key, done_on: d });
+      if (error) { toast('บันทึกไม่สำเร็จ ลองอีกครั้ง'); reloadSoon(); }
+    }
+    return;
+  }
+
+  if (a === 'labor' && v?.active) {
+    if (!confirm(`ยืนยันว่า ${v.name} (คอก ${v.code}) กำลังคลอด?\nทุกคนจะเห็นคอกนี้เป็นสีแดง`)) return;
+    const { error } = await sb.from('pregnancies').update({ labor_started_at: new Date().toISOString() }).eq('id', v.active.id);
+    if (error) return toast('บันทึกไม่สำเร็จ: ' + error.message);
+    toast('แจ้งแล้ว · โทรหาสัตวแพทย์ด้วย'); return loadAll();
+  }
+  if (a === 'foalopen') { S.foalForm = { code: el.dataset.code, sex: null }; return render(); }
+  if (a === 'foalsex') { S.foalForm.sex = el.dataset.v; return render(); }
+  if (a === 'foalcancel') { S.foalForm = null; return render(); }
+  if (a === 'foalsave' && v?.active) {
+    const now = new Date().toISOString();
+    const gestation = diffDays(v.active.ovulation_date, today());
+    const sex = S.foalForm?.sex || null;
+    const up = await sb.from('pregnancies').update({ status: 'foaled', foaled_at: now }).eq('id', v.active.id);
+    if (up.error) return toast('บันทึกไม่สำเร็จ: ' + up.error.message);
+    const ins = await sb.from('foaling_records').insert({ mare_id: v.id, pregnancy_id: v.active.id, foaled_at: now, gestation_days: gestation, foal_sex: sex });
+    if (ins.error) toast('บันทึกประวัติไม่สำเร็จ: ' + ins.error.message); else toast('บันทึกการคลอดแล้ว');
+    S.foalForm = null; return loadAll();
+  }
+
+  if (a === 'mpick') { S.milk[el.dataset.f] = +el.dataset.v; return render(); }
+  if (a === 'mtoggle') { S.milk[el.dataset.f] = !S.milk[el.dataset.f]; return render(); }
+  if (a === 'msave' && v?.active) {
+    const m = S.milk;
+    if (m.ca == null) return toast('เลือกค่าแคลเซียมก่อน (ข้อ 1)');
+    const rec = { client_id: uuid(), pregnancy_id: v.active.id, observed_at: new Date().toISOString(), ca_level: m.ca, ph_level: m.ph, udder: m.udder, waxing: m.waxing, milk_leaking: m.leak };
+    S.queue.push(rec); saveQueue(); S.obs.push(rec);
+    S.milk = { ca: null, ph: null, udder: null, waxing: false, leak: false };
+    compute();
+    const next = milkQueue().find((x) => x.code !== v.code);
+    toast(navigator.onLine ? 'บันทึก ' + v.name + ' แล้ว' : 'เก็บไว้ในเครื่องแล้ว จะส่งเมื่อมีเน็ต');
+    flushQueue();
+    window.scrollTo(0, 0);
+    return go(next ? `#/milk/${encodeURIComponent(next.code)}` : '#/map');
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  if (el.dataset.act === 'backdrop') { if (e.target === el) go(`#/${el.dataset.view}`); return; }
+  e.preventDefault();
+  act(el);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { const r = route(); if (r.code && r.view !== 'milk') go(`#/${r.view}`); }
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'q') {
+    S.q = e.target.value;
+    const by = { due: (a, b) => a.rank - b.rank || (a.left ?? 999) - (b.left ?? 999), name: (a, b) => a.name.localeCompare(b.name, 'th'), age: (a, b) => (b.age ?? -1) - (a.age ?? -1), stall: (a, b) => a.code.localeCompare(b.code) };
+    document.getElementById('cards').innerHTML = cardsHtml(by[S.sort]);
+  }
+});
+document.addEventListener('submit', async (e) => {
+  if (e.target.id !== 'login') return;
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const err = document.getElementById('login-err');
+  err.textContent = 'กำลังเข้าสู่ระบบ…';
+  const { error } = await sb.auth.signInWithPassword({ email: f.get('email'), password: f.get('password') });
+  if (error) err.textContent = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+});
+window.addEventListener('hashchange', () => { if (!route().code) S.foalForm = null; render(); });
+window.addEventListener('online', () => { toast('กลับมาออนไลน์แล้ว กำลังส่งข้อมูล'); flushQueue(); });
+
+/* ═════════════ boot ═════════════ */
+let booted = false;
+async function onSession(session) {
+  S.session = session;
+  if (!session) { S.staff = null; S.loaded = false; return render(); }
+  const { data, error } = await sb.from('staff').select('*').eq('user_id', session.user.id).maybeSingle();
+  if (error) { toast('ตรวจสิทธิ์ไม่สำเร็จ: ' + error.message); }
+  S.staff = data || null;
+  if (!S.staff) return render();
+  render();
+  await loadAll();
+  flushQueue();
+  if (!booted) { booted = true; subscribe(); }
+}
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') setTimeout(() => onSession(session), 0);
+});
+</script>
+</body>
+</html>
